@@ -6,6 +6,9 @@ const dbConfig = {
   port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 3306,
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || 'password',
+  ssl: process.env.DB_HOST && process.env.DB_HOST.includes('tidbcloud.com') 
+    ? { minVersion: 'TLSv1.2', rejectUnauthorized: true } 
+    : undefined,
   waitForConnections: true,
   connectionLimit: 50,
   queueLimit: 0
@@ -25,10 +28,10 @@ const initDB = async () => {
     const tempConnection = await mysql.createConnection(dbConfig);
     await tempConnection.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\``);
     await tempConnection.end();
-    
+
     // 2. Now use the main pool to create tables
     const connection = await pool.getConnection();
-    
+
     await connection.query(`
       CREATE TABLE IF NOT EXISTS releases (
         id INT AUTO_INCREMENT PRIMARY KEY,
